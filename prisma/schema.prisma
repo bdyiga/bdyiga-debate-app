@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("STUDENT") // MANAGER, JUDGE, STUDENT
+  createdAt DateTime @default(now())
+
+  judgePairings Pairing[] @relation("JudgePairings")
+  ballots       Ballot[]
+
+  affirmativePairings Pairing[] @relation("AffirmativePairings")
+  negativePairings    Pairing[] @relation("NegativePairings")
+}
+
+model Tournament {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @default("")
+  resolution  String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  rounds Round[]
+}
+
+model Round {
+  id           Int      @id @default(autoincrement())
+  roundNumber  Int
+  tournamentId Int
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  pairings   Pairing[]
+}
+
+model Pairing {
+  id             Int      @id @default(autoincrement())
+  roundId        Int
+  affirmativeId  Int
+  negativeId     Int
+  judgeId        Int
+  room           String   @default("")
+  createdAt      DateTime @default(now())
+
+  round       Round  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  affirmative User   @relation("AffirmativePairings", fields: [affirmativeId], references: [id])
+  negative    User   @relation("NegativePairings", fields: [negativeId], references: [id])
+  judge       User   @relation("JudgePairings", fields: [judgeId], references: [id])
+  ballot      Ballot?
+}
+
+model Ballot {
+  id            Int      @id @default(autoincrement())
+  pairingId     Int      @unique
+  judgeId       Int
+  winner        String   // AFFIRMATIVE or NEGATIVE
+  affSpeakerPts Float
+  negSpeakerPts Float
+  comments      String   @default("")
+  createdAt     DateTime @default(now())
+
+  pairing Pairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  judge   User    @relation(fields: [judgeId], references: [id])
+}
