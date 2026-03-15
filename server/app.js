@@ -5,7 +5,10 @@ import prisma from "./prisma.js";
 import { getSession, requireAuth } from "./session.js";
 
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || true,
+  credentials: true,
+}));
 app.use(express.json());
 
 // ─── Auth ────────────────────────────────────────────────────────────────────

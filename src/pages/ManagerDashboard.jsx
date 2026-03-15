@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useRequireAuth } from "../lib/useUser";
+import { apiFetch } from "../lib/api";
 import TournamentForm from "../components/TournamentForm";
 
 export default function ManagerDashboard() {
@@ -9,7 +10,7 @@ export default function ManagerDashboard() {
   const [showForm, setShowForm] = useState(false);
 
   const fetchTournaments = useCallback(async () => {
-    const res = await fetch("/api/tournaments");
+    const res = await apiFetch("/api/tournaments");
     if (res.ok) setTournaments(await res.json());
   }, []);
 

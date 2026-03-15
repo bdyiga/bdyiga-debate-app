@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useRequireAuth } from "../lib/useUser";
+import { api, apiFetch } from "../lib/api";
 import PairingCard from "../components/PairingCard";
 
 export default function TournamentDetail() {
@@ -15,15 +16,15 @@ export default function TournamentDetail() {
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
-    const res = await fetch(`/api/tournaments/${id}`);
+    const res = await apiFetch(`/api/tournaments/${id}`);
     if (res.ok) setTournament(await res.json());
   }, [id]);
 
   useEffect(() => {
     if (user && id) {
       fetchTournament();
-      fetch("/api/users?role=judge").then((r) => r.json()).then(setJudges);
-      fetch("/api/users?role=student").then((r) => r.json()).then(setStudents);
+      apiFetch("/api/users?role=judge").then((r) => r.json()).then(setJudges);
+      apiFetch("/api/users?role=student").then((r) => r.json()).then(setStudents);
     }
   }, [user, id, fetchTournament]);
 
@@ -36,7 +37,7 @@ export default function TournamentDetail() {
   const addRound = async () => {
     setError("");
     const nextNum = tournament.rounds.length + 1;
-    const res = await fetch("/api/rounds", {
+    const res = await apiFetch("/api/rounds", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tournamentId: parseInt(id), roundNumber: nextNum }),
@@ -52,7 +53,7 @@ export default function TournamentDetail() {
       setError("Affirmative and negative debater must be different");
       return;
     }
-    const res = await fetch("/api/pairings", {
+    const res = await apiFetch("/api/pairings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pairingForm),
@@ -76,7 +77,7 @@ export default function TournamentDetail() {
           <p className="text-gray-600 mt-1 text-sm italic">{tournament.resolution}</p>
           <p className="text-gray-400 text-xs mt-1">{new Date(tournament.date).toLocaleDateString()}</p>
         </div>
-        <a href={`/api/tournaments/${id}/export`} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">Export CSV</a>
+        <a href={api(`/api/tournaments/${id}/export`)} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">Export CSV</a>
       </div>
       {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
       <div className="flex gap-3 mb-6">

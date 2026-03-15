@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useRequireAuth } from "../lib/useUser";
+import { apiFetch } from "../lib/api";
 import BallotForm from "../components/BallotForm";
 
 export default function BallotPage() {
@@ -12,7 +13,7 @@ export default function BallotPage() {
 
   useEffect(() => {
     if (!user || !pairingId) return;
-    fetch(`/api/pairings?judgeId=${user.id}`)
+    apiFetch(`/api/pairings?judgeId=${user.id}`)
       .then((r) => r.json())
       .then((pairings) => {
         const match = pairings.find((p) => p.id === parseInt(pairingId));

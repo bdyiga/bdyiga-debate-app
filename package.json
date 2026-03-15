@@ -11,7 +11,7 @@
     "prisma:generate": "npx prisma generate",
     "seed": "node prisma/seed.js",
     "setup": "npx prisma migrate dev --name init && node prisma/seed.js",
-    "deploy:gh-pages": "vite build && npx gh-pages -d dist",
+    "deploy:gh-pages": "VITE_BASE_PATH=/bdyiga-debate-app/ vite build && npx gh-pages -d dist",
     "postinstall": "npx prisma generate"
   },
   "prisma": {

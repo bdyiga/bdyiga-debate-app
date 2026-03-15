@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRequireAuth } from "../lib/useUser";
+import { apiFetch } from "../lib/api";
 
 export default function StudentDashboard() {
   const { user, loading } = useRequireAuth(["STUDENT"]);
@@ -7,7 +8,7 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    fetch(`/api/pairings?studentId=${user.id}`)
+    apiFetch(`/api/pairings?studentId=${user.id}`)
       .then((r) => r.json())
       .then(setPairings);
   }, [user]);

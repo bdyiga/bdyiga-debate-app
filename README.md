@@ -38,22 +38,28 @@ NODE_ENV=production npm start          # Serve frontend + API on port 3000
 
 ### GitHub Pages (Frontend Only)
 
-GitHub Pages serves static files — the API won't run there. Use this for a frontend-only deployment with a separate backend.
+GitHub Pages serves static files — the API won't run there. Point the frontend at a hosted API (e.g. your Vercel deployment).
 
 ```bash
-# Build and deploy to gh-pages branch
-npm run deploy:gh-pages
+# Set your Vercel API URL, then build & deploy
+VITE_API_URL=https://your-app.vercel.app npm run deploy:gh-pages
 ```
 
-For a repo at `https://github.com/user/repo`, set the base path before building:
+The deploy script automatically sets `VITE_BASE_PATH=/bdyiga-debate-app/` for correct asset paths and generates a `404.html` for SPA routing.
 
-```bash
-VITE_BASE_PATH=/repo/ npm run build
-```
+On the API side (Vercel), set `CORS_ORIGIN=https://bdyiga.github.io` so the server accepts cross-origin requests from GitHub Pages.
 
-The build automatically generates a `404.html` for SPA routing support.
+## Environment Variables
 
-To connect to a backend API, configure the fetch base URL in the frontend (or use a reverse proxy).
+| Variable | Where | Description |
+|---|---|---|
+| `DATABASE_URL` | Server | Prisma DB connection (e.g. `file:./dev.db` for SQLite) |
+| `SESSION_SECRET` | Server | iron-session secret (32+ chars) |
+| `CORS_ORIGIN` | Server | Allowed origin for CORS (e.g. `https://bdyiga.github.io`) |
+| `PORT` | Server | Server port (default `3000`) |
+| `NODE_ENV` | Server | Set to `production` for prod builds |
+| `VITE_API_URL` | Build-time | API base URL for GH Pages (e.g. `https://your-app.vercel.app`) |
+| `VITE_BASE_PATH` | Build-time | Asset base path for GH Pages (e.g. `/bdyiga-debate-app/`) |
 
 ## Test Credentials
 
@@ -171,6 +177,7 @@ No external paid services — runs entirely locally.
 │   ├── App.jsx             # React Router routes
 │   ├── index.css           # Tailwind styles
 │   ├── lib/
+│   │   ├── api.js          # API URL helper (VITE_API_URL support)
 │   │   └── useUser.jsx     # Auth context + hooks
 │   ├── components/
 │   │   ├── Navbar.jsx

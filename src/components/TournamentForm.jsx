@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiFetch } from "../lib/api";
 
 export default function TournamentForm({ onCreated }) {
   const [name, setName] = useState("");
@@ -19,7 +20,7 @@ export default function TournamentForm({ onCreated }) {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/tournaments", {
+      const res = await apiFetch("/api/tournaments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, resolution, description, date: date || undefined }),

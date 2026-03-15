@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRequireAuth } from "../lib/useUser";
+import { apiFetch } from "../lib/api";
 import PairingCard from "../components/PairingCard";
 
 export default function JudgeDashboard() {
@@ -7,7 +8,7 @@ export default function JudgeDashboard() {
   const [pairings, setPairings] = useState([]);
 
   const fetchPairings = async () => {
-    const res = await fetch(`/api/pairings?judgeId=${user.id}`);
+    const res = await apiFetch(`/api/pairings?judgeId=${user.id}`);
     if (res.ok) setPairings(await res.json());
   };
 

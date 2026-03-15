@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiFetch } from "../lib/api";
 
 export default function BallotForm({ pairing, onSubmitted }) {
   const [winner, setWinner] = useState("");
@@ -19,7 +20,7 @@ export default function BallotForm({ pairing, onSubmitted }) {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/ballots", {
+      const res = await apiFetch("/api/ballots", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
