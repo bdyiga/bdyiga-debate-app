@@ -15,7 +15,7 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (password.length < 4) { setError("Password must be at least 4 characters"); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
       const user = await signup(email, password, name, role);

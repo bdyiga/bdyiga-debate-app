@@ -1,8 +1,7 @@
 import express from "express";
 import cors from "cors";
-import bcrypt from "bcryptjs";
 import prisma from "./prisma.js";
-import { getSession, requireAuth } from "./session.js";
+import { requireAuth } from "./auth.js";
 
 const app = express();
 app.use(cors({
@@ -13,58 +12,8 @@ app.use(express.json());
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
-app.post("/api/auth/signup", async (req, res) => {
-  const { email, password, name, role } = req.body;
-  if (!email || !password || !name) {
-    return res.status(400).json({ error: "Email, password, and name are required" });
-  }
-
-  const validRoles = ["MANAGER", "JUDGE", "STUDENT"];
-  const userRole = validRoles.includes(role) ? role : "STUDENT";
-
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return res.status(409).json({ error: "Email already registered" });
-
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { email, password: hashed, name, role: userRole },
-  });
-
-  const session = await getSession(req, res);
-  session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
-  await session.save();
-
-  res.status(201).json({ id: user.id, email: user.email, name: user.name, role: user.role });
-});
-
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
-  }
-
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: "Invalid email or password" });
-  }
-
-  const session = await getSession(req, res);
-  session.user = { id: user.id, email: user.email, name: user.name, role: user.role };
-  await session.save();
-
-  res.json({ id: user.id, email: user.email, name: user.name, role: user.role });
-});
-
-app.post("/api/auth/logout", async (req, res) => {
-  const session = await getSession(req, res);
-  session.destroy();
-  res.json({ ok: true });
-});
-
-app.get("/api/auth/me", async (req, res) => {
-  const session = await getSession(req, res);
-  if (!session.user) return res.status(401).json({ user: null });
-  res.json({ user: session.user });
+app.get("/api/auth/me", requireAuth(), async (req, res) => {
+  res.json({ user: req.user });
 });
 
 // ─── Users ───────────────────────────────────────────────────────────────────

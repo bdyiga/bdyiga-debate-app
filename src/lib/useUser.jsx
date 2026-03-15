@@ -1,5 +1,6 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "./supabase";
 import { apiFetch } from "./api";
 
 const UserContext = createContext(null);
@@ -8,42 +9,62 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    apiFetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data) => {
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await apiFetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
         setUser(data.user || null);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        return data.user || null;
+      }
+      setUser(null);
+      return null;
+    } catch {
+      setUser(null);
+      return null;
+    }
   }, []);
 
-  const login = async (email, password) => {
-    const res = await apiFetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchProfile().finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    setUser(data);
-    return data;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchProfile();
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
+
+  const login = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    return await fetchProfile();
   };
 
   const signup = async (email, password, name, role) => {
-    const res = await apiFetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name, role }),
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name, role } },
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    setUser(data);
-    return data;
+    if (error) throw new Error(error.message);
+    return await fetchProfile();
   };
 
   const logout = async () => {
-    await apiFetch("/api/auth/logout", { method: "POST" });
+    await supabase.auth.signOut();
     setUser(null);
   };
 

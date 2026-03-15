@@ -1,8 +1,17 @@
 # LD Debate Tournament Manager
 
-A local-first web application for organizing Lincoln-Douglas (LD) debate tournaments. Built with **Vite + React**, **Express**, **Prisma (SQLite)**, and **TailwindCSS**.
+A web application for organizing Lincoln-Douglas (LD) debate tournaments. Built with **Vite + React**, **Express**, **Prisma (PostgreSQL)**, **Supabase Auth**, and **TailwindCSS**.
 
 Deployable on **Vercel**, **GitHub Pages**, or run entirely locally.
+
+## Prerequisites
+
+1. A **Supabase** project — create one free at [supabase.com](https://supabase.com)
+2. In your Supabase dashboard:
+   - Go to **Settings > API** to get your project URL, anon key, and service role key
+   - Go to **Settings > Database** to get your PostgreSQL connection strings
+   - Go to **Authentication > Providers** and make sure **Email** is enabled
+   - Under **Authentication > Settings**, disable "Confirm email" for local development
 
 ## Quick Start
 
@@ -10,10 +19,14 @@ Deployable on **Vercel**, **GitHub Pages**, or run entirely locally.
 # 1. Install dependencies
 npm install
 
-# 2. Run database migration and seed test data
+# 2. Copy and fill in your Supabase credentials
+#    (edit .env with your real values)
+cp .env .env.local   # or just edit .env directly
+
+# 3. Push the schema to Supabase and seed test data
 npm run setup
 
-# 3. Start the development server
+# 4. Start the development server
 npm run dev
 ```
 
@@ -33,8 +46,10 @@ NODE_ENV=production npm start          # Serve frontend + API on port 3000
 1. Push the repo to GitHub
 2. Import the repo in [vercel.com](https://vercel.com)
 3. Vercel auto-detects the config from `vercel.json`
-4. Set environment variables in the Vercel dashboard: `SESSION_SECRET`, `DATABASE_URL`
-5. **Note**: SQLite uses a local file — for production Vercel, swap to a cloud-compatible database (e.g. Turso, PlanetScale, or Vercel Postgres) by updating `prisma/schema.prisma`
+4. Set these environment variables in the Vercel dashboard:
+   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+   - `DATABASE_URL`, `DIRECT_URL`
 
 ### GitHub Pages (Frontend Only)
 
@@ -53,11 +68,14 @@ On the API side (Vercel), set `CORS_ORIGIN=https://bdyiga.github.io` so the serv
 
 | Variable | Where | Description |
 |---|---|---|
-| `DATABASE_URL` | Server | Prisma DB connection (e.g. `file:./dev.db` for SQLite) |
-| `SESSION_SECRET` | Server | iron-session secret (32+ chars) |
+| `SUPABASE_URL` | Server + Build | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Service role key (keep secret!) |
+| `VITE_SUPABASE_URL` | Build-time | Supabase URL for the frontend |
+| `VITE_SUPABASE_ANON_KEY` | Build-time | Supabase anon key for the frontend |
+| `DATABASE_URL` | Server | Supabase pooled PostgreSQL connection string |
+| `DIRECT_URL` | Server | Supabase direct PostgreSQL connection string |
 | `CORS_ORIGIN` | Server | Allowed origin for CORS (e.g. `https://bdyiga.github.io`) |
 | `PORT` | Server | Server port (default `3000`) |
-| `NODE_ENV` | Server | Set to `production` for prod builds |
 | `VITE_API_URL` | Build-time | API base URL for GH Pages (e.g. `https://your-app.vercel.app`) |
 | `VITE_BASE_PATH` | Build-time | Asset base path for GH Pages (e.g. `/bdyiga-debate-app/`) |
 
@@ -122,26 +140,15 @@ Lincoln-Douglas (LD) is a one-on-one debate format:
 ### 4. Export Ballots (Manager)
 1. From tournament detail, click "Export CSV"
 
-### 5. Permission Check
-```bash
-curl -X POST http://localhost:3000/api/ballots \
-  -H "Content-Type: application/json" \
-  -b <judge_cookie_for_unassigned_pairing> \
-  -d '{"pairingId":6,"winner":"AFFIRMATIVE","affSpeakerPts":28,"negSpeakerPts":27}'
-# Returns 403: "You are not assigned to judge this pairing"
-```
-
 ## Tech Stack
 
 | Layer     | Technology                                  |
 |-----------|---------------------------------------------|
 | Frontend  | Vite, React, React Router, TailwindCSS      |
 | Backend   | Express (API routes)                        |
-| Database  | SQLite via Prisma ORM                       |
-| Auth      | iron-session (encrypted cookies) + bcryptjs |
+| Database  | PostgreSQL via Prisma ORM (Supabase)        |
+| Auth      | Supabase Auth (JWT tokens)                  |
 | Deploy    | Vercel (full-stack) or GitHub Pages (SPA)   |
-
-No external paid services — runs entirely locally.
 
 ## Scripts
 
@@ -150,7 +157,8 @@ No external paid services — runs entirely locally.
 | `npm run dev`        | Start dev server (Vite + Express, port 3000) |
 | `npm run build`      | Build frontend with Vite                   |
 | `npm start`          | Production: Express serves dist/ + API     |
-| `npm run setup`      | Run migration + seed (first time)          |
+| `npm run setup`      | Push schema + seed (first time)            |
+| `npm run prisma:push`| Push schema to Supabase                    |
 | `npm run prisma:migrate` | Run Prisma migration                  |
 | `npm run seed`       | Seed database with test data               |
 | `npm run deploy:gh-pages` | Build and deploy to GitHub Pages      |
@@ -164,21 +172,23 @@ No external paid services — runs entirely locally.
 ├── package.json
 ├── server/
 │   ├── app.js              # Express API (all routes)
+│   ├── auth.js             # Supabase JWT verification + auth middleware
 │   ├── index.js            # Server entry (dev: Vite middleware, prod: static)
 │   ├── prisma.js           # Prisma client singleton
-│   └── session.js          # iron-session config + auth middleware
+│   └── supabase.js         # Supabase admin client (service role)
 ├── api/
 │   └── index.js            # Vercel serverless entry
 ├── prisma/
-│   ├── schema.prisma       # Database schema
-│   └── seed.js             # Test data seeder
+│   ├── schema.prisma       # Database schema (PostgreSQL)
+│   └── seed.js             # Test data seeder (creates Supabase auth users + DB records)
 ├── src/
 │   ├── main.jsx            # React entry
 │   ├── App.jsx             # React Router routes
 │   ├── index.css           # Tailwind styles
 │   ├── lib/
-│   │   ├── api.js          # API URL helper (VITE_API_URL support)
-│   │   └── useUser.jsx     # Auth context + hooks
+│   │   ├── api.js          # API URL helper + JWT-authenticated fetch
+│   │   ├── supabase.js     # Supabase client (anon key)
+│   │   └── useUser.jsx     # Auth context + hooks (Supabase Auth)
 │   ├── components/
 │   │   ├── Navbar.jsx
 │   │   ├── BallotForm.jsx

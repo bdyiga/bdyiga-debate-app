@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 export const API_URL = import.meta.env.VITE_API_URL || "";
 
 export function api(path) {
@@ -5,12 +7,18 @@ export function api(path) {
 }
 
 /**
- * Thin wrapper around fetch that adds credentials: "include" when
- * the frontend and API are on different origins (e.g. GH Pages → Vercel).
+ * Fetch wrapper that adds the Supabase access token as a Bearer header
+ * and handles cross-origin credentials when API_URL is set.
  */
-export function apiFetch(path, options = {}) {
+export async function apiFetch(path, options = {}) {
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+
   return fetch(api(path), {
-    credentials: API_URL ? "include" : "same-origin",
     ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
 }

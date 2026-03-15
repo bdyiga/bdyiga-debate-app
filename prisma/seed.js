@@ -1,67 +1,56 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
 const prisma = new PrismaClient();
-const hash = (pw) => bcrypt.hashSync(pw, 10);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
+async function upsertUser(email, name, role) {
+  let existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return existing;
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password: "password",
+    email_confirm: true,
+    user_metadata: { name, role },
+  });
+
+  if (error) {
+    if (error.message?.includes("already been registered")) {
+      const { data: list } = await supabase.auth.admin.listUsers();
+      const match = list.users.find((u) => u.email === email);
+      if (match) {
+        return prisma.user.create({
+          data: { supabaseId: match.id, email, name, role },
+        });
+      }
+    }
+    throw error;
+  }
+
+  return prisma.user.create({
+    data: { supabaseId: data.user.id, email, name, role },
+  });
+}
 
 async function main() {
-  const manager1 = await prisma.user.upsert({
-    where: { email: "manager@example.com" },
-    update: {},
-    create: { email: "manager@example.com", password: hash("password"), name: "Alice Manager", role: "MANAGER" },
-  });
-  const manager2 = await prisma.user.upsert({
-    where: { email: "manager2@example.com" },
-    update: {},
-    create: { email: "manager2@example.com", password: hash("password"), name: "Bob Manager", role: "MANAGER" },
-  });
+  const manager1 = await upsertUser("manager@example.com", "Alice Manager", "MANAGER");
+  await upsertUser("manager2@example.com", "Bob Manager", "MANAGER");
 
-  const judge1 = await prisma.user.upsert({
-    where: { email: "judge1@example.com" },
-    update: {},
-    create: { email: "judge1@example.com", password: hash("password"), name: "Carol Judge", role: "JUDGE" },
-  });
-  const judge2 = await prisma.user.upsert({
-    where: { email: "judge2@example.com" },
-    update: {},
-    create: { email: "judge2@example.com", password: hash("password"), name: "Dave Judge", role: "JUDGE" },
-  });
-  const judge3 = await prisma.user.upsert({
-    where: { email: "judge3@example.com" },
-    update: {},
-    create: { email: "judge3@example.com", password: hash("password"), name: "Eve Judge", role: "JUDGE" },
-  });
+  const judge1 = await upsertUser("judge1@example.com", "Carol Judge", "JUDGE");
+  const judge2 = await upsertUser("judge2@example.com", "Dave Judge", "JUDGE");
+  const judge3 = await upsertUser("judge3@example.com", "Eve Judge", "JUDGE");
 
-  const student1 = await prisma.user.upsert({
-    where: { email: "student1@example.com" },
-    update: {},
-    create: { email: "student1@example.com", password: hash("password"), name: "Frank Student", role: "STUDENT" },
-  });
-  const student2 = await prisma.user.upsert({
-    where: { email: "student2@example.com" },
-    update: {},
-    create: { email: "student2@example.com", password: hash("password"), name: "Grace Student", role: "STUDENT" },
-  });
-  const student3 = await prisma.user.upsert({
-    where: { email: "student3@example.com" },
-    update: {},
-    create: { email: "student3@example.com", password: hash("password"), name: "Hank Student", role: "STUDENT" },
-  });
-  const student4 = await prisma.user.upsert({
-    where: { email: "student4@example.com" },
-    update: {},
-    create: { email: "student4@example.com", password: hash("password"), name: "Ivy Student", role: "STUDENT" },
-  });
-  const student5 = await prisma.user.upsert({
-    where: { email: "student5@example.com" },
-    update: {},
-    create: { email: "student5@example.com", password: hash("password"), name: "Jake Student", role: "STUDENT" },
-  });
-  const student6 = await prisma.user.upsert({
-    where: { email: "student6@example.com" },
-    update: {},
-    create: { email: "student6@example.com", password: hash("password"), name: "Kim Student", role: "STUDENT" },
-  });
+  const student1 = await upsertUser("student1@example.com", "Frank Student", "STUDENT");
+  const student2 = await upsertUser("student2@example.com", "Grace Student", "STUDENT");
+  const student3 = await upsertUser("student3@example.com", "Hank Student", "STUDENT");
+  const student4 = await upsertUser("student4@example.com", "Ivy Student", "STUDENT");
+  const student5 = await upsertUser("student5@example.com", "Jake Student", "STUDENT");
+  const student6 = await upsertUser("student6@example.com", "Kim Student", "STUDENT");
 
   const tournament = await prisma.tournament.upsert({
     where: { id: 1 },
