@@ -7,17 +7,22 @@ export function api(path) {
 }
 
 /**
- * Fetch wrapper that adds the Supabase access token as a Bearer header
- * and handles cross-origin credentials when API_URL is set.
+ * Fetch wrapper that adds the Supabase access token as a Bearer header.
+ * Accepts an optional `token` override for use right after sign-in
+ * (before getSession reflects the new session).
  */
 export async function apiFetch(path, options = {}) {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token;
+  let token = options._token;
+  if (!token) {
+    const { data } = await supabase.auth.getSession();
+    token = data?.session?.access_token;
+  }
 
+  const { _token, ...fetchOptions } = options;
   return fetch(api(path), {
-    ...options,
+    ...fetchOptions,
     headers: {
-      ...options.headers,
+      ...fetchOptions.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });

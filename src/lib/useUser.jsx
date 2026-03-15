@@ -9,9 +9,10 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (token) => {
     try {
-      const res = await apiFetch("/api/auth/me");
+      const opts = token ? { _token: token } : {};
+      const res = await apiFetch("/api/auth/me", opts);
       if (res.ok) {
         const data = await res.json();
         setUser(data.user || null);
@@ -28,7 +29,7 @@ export function UserProvider({ children }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        fetchProfile().finally(() => setLoading(false));
+        fetchProfile(session.access_token).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -38,7 +39,7 @@ export function UserProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        fetchProfile();
+        fetchProfile(session.access_token);
       } else {
         setUser(null);
       }
@@ -48,19 +49,20 @@ export function UserProvider({ children }) {
   }, [fetchProfile]);
 
   const login = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
-    return await fetchProfile();
+    return await fetchProfile(data.session.access_token);
   };
 
   const signup = async (email, password, name, role) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name, role } },
     });
     if (error) throw new Error(error.message);
-    return await fetchProfile();
+    if (!data.session) throw new Error("Check your email to confirm your account");
+    return await fetchProfile(data.session.access_token);
   };
 
   const logout = async () => {
