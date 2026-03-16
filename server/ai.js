@@ -1,14 +1,36 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL = "gemini-2.0-flash";
+const MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+];
 
-let _model;
-function getModel() {
-  if (!_model) {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    _model = genAI.getGenerativeModel({ model: MODEL });
+let _genAI;
+function getGenAI() {
+  if (!_genAI) {
+    _genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
-  return _model;
+  return _genAI;
+}
+
+async function generateWithFallback(prompt) {
+  let lastError;
+  for (const modelName of MODELS) {
+    try {
+      const model = getGenAI().getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      lastError = err;
+      if (err.status === 429) {
+        console.warn(`Model ${modelName} quota exceeded, trying next model...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
 }
 
 export async function generateBallotFeedback({
@@ -40,15 +62,14 @@ export async function generateBallotFeedback({
     `and ${loserPts} for the loser should be reflected in the tone.`,
   ].join("\n");
 
-  const result = await getModel().generateContent(prompt);
-  return result.response.text().trim();
+  return generateWithFallback(prompt);
 }
 
 export async function generateDebatePrep({ resolution, side }) {
   const prompt = [
     "You are an expert Lincoln-Douglas debate coach helping a student prepare a case.",
     "Given a resolution and side (affirmative or negative), produce a structured prep brief.",
-    "Respond with valid JSON only — no markdown fences, no extra text. Match this schema exactly:",
+    "Respond with valid JSON only - no markdown fences, no extra text. Match this schema exactly:",
     "{",
     '  "definitions": ["key term 1: definition", ...],',
     '  "value": "the core value (e.g. Justice, Morality, Liberty)",',
@@ -68,9 +89,7 @@ export async function generateDebatePrep({ resolution, side }) {
     `Generate a prep brief for the ${side} side.`,
   ].join("\n");
 
-  const result = await getModel().generateContent(prompt);
-  const text = result.response.text().trim();
-
+  const text = await generateWithFallback(prompt);
   const cleaned = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
   return JSON.parse(cleaned);
 }
