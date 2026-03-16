@@ -43,9 +43,14 @@ export default function Navbar() {
                 </Link>
               )}
               {user.role === "STUDENT" && (
-                <Link to="/student" className="hover:text-indigo-200 transition">
-                  My Rounds
-                </Link>
+                <>
+                  <Link to="/student" className="hover:text-indigo-200 transition">
+                    My Rounds
+                  </Link>
+                  <Link to="/student/prep" className="hover:text-indigo-200 transition">
+                    Prep Coach
+                  </Link>
+                </>
               )}
               <span className="text-indigo-200 hidden sm:inline">
                 {user.name} ({user.role.toLowerCase()})

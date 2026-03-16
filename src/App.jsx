@@ -9,6 +9,7 @@ import TournamentDetail from "./pages/TournamentDetail";
 import JudgeDashboard from "./pages/JudgeDashboard";
 import BallotPage from "./pages/BallotPage";
 import StudentDashboard from "./pages/StudentDashboard";
+import DebatePrepPage from "./pages/DebatePrepPage";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/judge" element={<JudgeDashboard />} />
             <Route path="/judge/ballot/:pairingId" element={<BallotPage />} />
             <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/student/prep" element={<DebatePrepPage />} />
           </Routes>
         </main>
       </div>

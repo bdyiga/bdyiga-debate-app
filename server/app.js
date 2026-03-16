@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import prisma from "./prisma.js";
 import { requireAuth } from "./auth.js";
+import { generateBallotFeedback, generateDebatePrep } from "./ai.js";
 
 const app = express();
 app.use(cors({
@@ -296,6 +297,39 @@ app.post("/api/ballots", requireAuth("JUDGE"), async (req, res) => {
     },
   });
   res.status(201).json(ballot);
+});
+
+// ─── AI ───────────────────────────────────────────────────────────────────────
+
+app.post("/api/ai/ballot-feedback", requireAuth("JUDGE"), async (req, res) => {
+  const { resolution, affName, negName, winner, affPts, negPts } = req.body;
+  if (!resolution || !affName || !negName || !winner) {
+    return res.status(400).json({ error: "resolution, affName, negName, and winner are required" });
+  }
+  try {
+    const feedback = await generateBallotFeedback({ resolution, affName, negName, winner, affPts, negPts });
+    res.json({ feedback });
+  } catch (err) {
+    console.error("AI ballot feedback error:", err);
+    res.status(502).json({ error: "Failed to generate AI feedback. Please try again." });
+  }
+});
+
+app.post("/api/ai/debate-prep", requireAuth("STUDENT"), async (req, res) => {
+  const { resolution, side } = req.body;
+  if (!resolution || !side) {
+    return res.status(400).json({ error: "resolution and side are required" });
+  }
+  if (!["affirmative", "negative"].includes(side.toLowerCase())) {
+    return res.status(400).json({ error: "side must be 'affirmative' or 'negative'" });
+  }
+  try {
+    const brief = await generateDebatePrep({ resolution, side: side.toLowerCase() });
+    res.json({ brief });
+  } catch (err) {
+    console.error("AI debate prep error:", err);
+    res.status(502).json({ error: "Failed to generate prep brief. Please try again." });
+  }
 });
 
 export default app;

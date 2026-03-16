@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useRequireAuth } from "../lib/useUser";
 import { apiFetch } from "../lib/api";
 
@@ -34,7 +35,25 @@ export default function StudentDashboard() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-2">My Rounds</h1>
-      <p className="text-gray-600 mb-8">Welcome, {user.name}. Here are your debate rounds and feedback.</p>
+      <p className="text-gray-600 mb-6">Welcome, {user.name}. Here are your debate rounds and feedback.</p>
+
+      <Link
+        to="/student/prep"
+        className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl p-4 mb-8 hover:bg-purple-100 transition group"
+      >
+        <div className="bg-purple-100 rounded-lg p-2.5 group-hover:bg-purple-200 transition">
+          <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+          </svg>
+        </div>
+        <div>
+          <div className="font-semibold text-purple-900">Debate Prep Coach</div>
+          <div className="text-sm text-purple-600">Generate AI-powered prep briefs for your next round</div>
+        </div>
+        <svg className="h-5 w-5 text-purple-400 ml-auto" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </Link>
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
           <div className="text-2xl font-bold text-indigo-600">{pairings.length}</div>

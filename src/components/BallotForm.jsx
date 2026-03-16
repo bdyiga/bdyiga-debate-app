@@ -8,6 +8,39 @@ export default function BallotForm({ pairing, onSubmitted }) {
   const [comments, setComments] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const resolution = pairing.round?.tournament?.resolution;
+
+  const handleGenerateFeedback = async () => {
+    if (!winner) {
+      setError("Please select a winner before generating feedback");
+      return;
+    }
+    setAiLoading(true);
+    setError("");
+    try {
+      const res = await apiFetch("/api/ai/ballot-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resolution,
+          affName: pairing.affirmative.name,
+          negName: pairing.negative.name,
+          winner,
+          affPts: parseFloat(affPts),
+          negPts: parseFloat(negPts),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setComments(data.feedback);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,7 +145,34 @@ export default function BallotForm({ pairing, onSubmitted }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Comments / Feedback</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium">Comments / Feedback</label>
+          {resolution && (
+            <button
+              type="button"
+              onClick={handleGenerateFeedback}
+              disabled={aiLoading}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 disabled:opacity-50 transition"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                  </svg>
+                  Generate AI Feedback
+                </>
+              )}
+            </button>
+          )}
+        </div>
         <textarea
           value={comments}
           onChange={(e) => setComments(e.target.value)}
@@ -120,6 +180,9 @@ export default function BallotForm({ pairing, onSubmitted }) {
           className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="Provide feedback on argumentation, delivery, cross-examination…"
         />
+        {resolution && (
+          <p className="text-xs text-gray-400 mt-1">AI-generated feedback is a draft — edit freely before submitting.</p>
+        )}
       </div>
 
       <button
