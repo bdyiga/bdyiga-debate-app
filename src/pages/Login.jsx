@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      if (!user) throw new Error("Login failed — please try again");
+      if (!user) throw new Error("Login failed - please try again");
       const dest = user.role === "MANAGER" ? "/manager" : user.role === "JUDGE" ? "/judge" : "/student";
       navigate(dest);
     } catch (err) {

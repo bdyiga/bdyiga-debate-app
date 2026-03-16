@@ -52,7 +52,7 @@ export default function BallotPage() {
       <Link to="/judge" className="text-indigo-600 hover:underline text-sm mb-4 inline-block">← Back to Dashboard</Link>
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
         <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-          {pairing.round?.tournament?.name} — Round {pairing.round?.roundNumber}
+          {pairing.round?.tournament?.name} - Round {pairing.round?.roundNumber}
         </div>
         <div className="text-sm text-gray-500 italic mb-2">{pairing.round?.tournament?.resolution}</div>
         <div className="text-sm text-gray-500">{pairing.room}</div>

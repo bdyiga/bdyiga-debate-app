@@ -20,7 +20,7 @@ export default function Home() {
         <span className="block text-indigo-600 mt-2">Tournament Manager</span>
       </h1>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-        Organize LD debate tournaments, manage pairings, submit ballots, and track speaker points — all in one place.
+        Organize LD debate tournaments, manage pairings, submit ballots, and track speaker points - all in one place.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         {user ? (
@@ -62,7 +62,7 @@ export default function Home() {
               </svg>
               <h3 className="font-bold text-purple-900">AI Ballot Feedback</h3>
             </div>
-            <p className="text-sm text-purple-700">Judges can generate AI-drafted feedback based on the round context, then edit and refine before submitting — saving time while delivering more detailed comments.</p>
+            <p className="text-sm text-purple-700">Judges can generate AI-drafted feedback based on the round context, then edit and refine before submitting - saving time while delivering more detailed comments.</p>
           </div>
         </div>
       </div>

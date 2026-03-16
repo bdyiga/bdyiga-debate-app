@@ -84,7 +84,7 @@ export default function StudentDashboard() {
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {p.round?.tournament?.name} — Round {p.round?.roundNumber}
+                    {p.round?.tournament?.name} - Round {p.round?.roundNumber}
                   </span>
                   <span className="text-xs text-gray-400 ml-2">{p.room}</span>
                 </div>

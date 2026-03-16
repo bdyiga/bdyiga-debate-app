@@ -116,7 +116,7 @@ export default function BallotForm({ pairing, onSubmitted }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
-            {pairing.affirmative.name} — Speaker Points
+            {pairing.affirmative.name} - Speaker Points
           </label>
           <input
             type="number"
@@ -130,7 +130,7 @@ export default function BallotForm({ pairing, onSubmitted }) {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            {pairing.negative.name} — Speaker Points
+            {pairing.negative.name} - Speaker Points
           </label>
           <input
             type="number"
@@ -181,7 +181,7 @@ export default function BallotForm({ pairing, onSubmitted }) {
           placeholder="Provide feedback on argumentation, delivery, cross-examination…"
         />
         {resolution && (
-          <p className="text-xs text-gray-400 mt-1">AI-generated feedback is a draft — edit freely before submitting.</p>
+          <p className="text-xs text-gray-400 mt-1">AI-generated feedback is a draft - edit freely before submitting.</p>
         )}
       </div>
 

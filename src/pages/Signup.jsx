@@ -19,7 +19,7 @@ export default function Signup() {
     setLoading(true);
     try {
       const user = await signup(email, password, name, role);
-      if (!user) throw new Error("Signup failed — please try again");
+      if (!user) throw new Error("Signup failed - please try again");
       const dest = user.role === "MANAGER" ? "/manager" : user.role === "JUDGE" ? "/judge" : "/student";
       navigate(dest);
     } catch (err) {
